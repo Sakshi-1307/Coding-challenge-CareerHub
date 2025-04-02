@@ -1,0 +1,157 @@
+Name- Sakshi Balgonda Patil.
+Emp id- 2000147788
+Batch- Batch-4
+Training- SQL (Coding challenge: CareerHub)
+__________________________________________________________________________________________________________________
+
+-- 1. createing database
+create database CareerHubs;
+use CareerHubs;
+
+-- 2. creating tables.
+-- 3.defining appropriate primary key, foreign keys and constraints
+-- 4.script handle potential errors.
+create table companies(
+companyID int primary key auto_increment,
+companyName varchar (255) not null,
+location varchar (255) not null
+);
+
+create table jobs(
+jobid int primary key auto_increment,
+companyID int,
+JobTitle varchar(255) not null,
+JobDescription text,
+joblocation varchar(255) not null,
+salary decimal(10,2) check (salary>0),
+jobtype varchar(50),
+posteddate datetime default current_timestamp,
+foreign key (companyid) references companies(companyid) on delete cascade
+);
+
+create table applicants(
+applicantid int primary key auto_increment,
+firstName varchar(255) not null,
+lastname varchar (255) not null,
+email varchar(255) unique not null,
+phone varchar(20) not null,
+resume text
+);
+
+create table applications(
+applicationid int primary key auto_increment,
+jobid int,
+applicantid int,
+applicationDate datetime default current_timestamp,
+coverletter text,
+foreign key(jobid) references jobs (jobid) on delete cascade,
+foreign key(applicantid) references applicants(applicantid) on delete cascade 
+);
+
+-- insert sample data into companies 
+insert into companies ( companyname,location) values 
+('TechCrop','new york'),
+('Innovate Ltd','San francisco'),
+('DevSolutions','Chicago');
+
+-- insert sample data into jobs
+insert into jobs (companyID, jobtitle,jobdescription,joblocation,salary,jobtype) values
+(1,'software engineer','develop application','nwe york',80000,'full time'),
+(2,'data analyst','analyze business data','san francisco',70000,'full time'),
+(3,'backend developer', 'develop api','chicago',75000,'contract');
+
+-- insert sample data into applicants
+insert into applicants (firstname,lastname,email,phone,resume) values
+( 'john','doe','john@example.com', 1234567890,'experienced software developer'),
+('jane','smith','jane@example.com',0987654321,'expert in data analysis');
+
+
+-- insert sample data into applications
+insert into applications(jobid, applicantid, coverletter) values
+(1,1,'passionate about coding'),
+(2,2,'greate at data analysis');
+
+
+-- 5. query to count number of application received for each job.
+select j.JobTitle, count(a.applicationid) as applicationcount
+from jobs j left join applications a on j.jobid=a.jobid
+group by j.jobtitle;
+
+-- 6. job listing from job table within specified salary range
+select j.jobtitle, c.companyname, j.joblocation, j.salary 
+from jobs j join companies c on j.companyid
+where j.salary between 60000 and 80000;
+
+-- 7. retrive job application history for specific applicants
+select j.jobtitle, c.companyname,a.applicationdate 
+from applications a
+join jobs j on a.jobid=j.jobid
+join companies c on j.companyid=c.companyid 
+where a.applicantid=2;
+
+-- 8. calculate and display average salary of all jobs offered by specific company
+select avg(salary) as avgsalary from jobs where salary>0;
+
+-- 9. query to identify the company which posted most job listing
+select c.companyname, count(j.jobid) as jobcount
+from companies c cross join jobs j on c.companyid=j.companyid
+group by c.companyname
+order by jobcount desc
+limit 1;
+
+
+-- 10. find applicants who applied for comapny 'cityx' and have at least 3 years of experience
+select distinct a.* from applicants a 
+ join applications ap on a.applicantid=ap.applicantid
+join jobs j on ap.jobid=j.jobid
+join companies c on j.companyid=c.companyid
+where c.location='cityx' and a.resume like '%3 years%';
+
+-- 11. retrive list of distict jobs with salary range of $60,000 to $80,000
+select distinct jobtitle,salary from jobs where salary between 60000 and 80000;
+
+-- 12. find jobs that have not received applications.
+select jobtitle from jobs where jobid not in (select distinct jobid from applications);
+
+-- 13. retrive list of job applicants along with the company they applied
+select a.firstname,a.lastname,c.companyname, j.jobtitle
+from applications ap
+join applicants a on ap.applicantID = a.applicantID
+join jobs j on ap.jobid= j.jobid
+join companies c on j.companyid= c.companyid;
+
+-- 14. retrive companies with job counts, including those with no applications
+select c.companyname, count(j.jobid) as jobcount
+from companies c
+left join jobs j on c.companyid=j.companyid
+group by c.companyname;
+
+-- 15. list all applicants and their applied companies including non applicants\
+select a.firstname, a.lastname, coalesce(c.companyname,'no application') as companyname, 
+coalesce(j.jobtitle,'no application') as jobtitle
+from applicants a left join applications ap on a.applicantID= ap.applicantID
+left join jobs j on ap.jobid=j.jobid
+left join companies c on j.companyid=c.companyid;
+
+-- 16. companies posting jobs with above average salaries
+select c.companyname
+from companies c join jobs j on c.companyid=j.companyid
+where j.salary>(select avg(salary) from jobs where salary>0);
+
+-- 17. display applicants with city and state concatenated
+select concat(a.firstname,'',a.lastname) as applicant_name, j.joblocation as location from applicants a 
+join jobs j on a.applicantid=j.jobid;
+
+-- 18. retrive jobs with developer and engineer in title
+select jobtitle from jobs where jobtitle like '%developer%'or jobtitle like '%engineer%';
+
+-- 19. retrive applicants and jobs, including those with no applications
+select a.firstname,a.lastname, coalesce(j.jobtitle,'no jobs') as jobtitle from applicants a
+left join applications ap on a.applicantid=ap.applicantid
+left join jobs j on ap.jobid=j.jobid;
+ 
+-- 20. combination of applicants and companies based on city and experience
+select a.firstname,a.lastname,c.companyname
+from applicants a, companies c 
+where c.location ='chennai' and a.Resume like '%2 years%';
+
